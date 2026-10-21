@@ -1,0 +1,161 @@
+v0.30.0: Networks Management, DNS and Vault Providers, Concurrent Builds, and Env Encryption
+Mauricio Siu
+Mauricio Siu
+
+August 14, 2026 • 7 min read
+
+v0.30.0: Networks Management, DNS and Vault Providers, Concurrent Builds, and Env Encryption
+This release brings a completely rebuilt Docker dashboard, full network management, native DNS management with Cloudflare and Route53, environment secrets resolved from external vault providers, encrypted environment variables at rest, concurrent builds for everyone, and a major security pass across the platform.
+
+It's been almost four months since v0.29.0, and a lot landed across the 0.29.x line that never got its own announcement. This post covers everything – if you're upgrading from v0.29.0, all of it is new to you.
+
+Network management
+Docker networks now have a full management surface instead of being something you only touched through the CLI.
+
+From the Networks tab in the Docker dashboard, you can create, inspect, and delete networks for the selected server – bridge or overlay, with MTU, internal/attachable flags, IPv4/IPv6, and custom IPAM (subnet/gateway/IP range) all exposed in the creation form.
+
+The Networks tab in the Docker dashboard
+
+Networks also attach per-service. Every application and compose service joins the shared dokploy-network by default – you can now detach it and attach only the networks you actually want that service reachable on, which takes effect on the next deploy.
+
+Dokploy Networks also attach per-service
+
+This is also why Isolated Deployment is now deprecated – it's still available in Compose's advanced settings for existing users, but templates no longer use it. Attaching/detaching networks per service covers the same use case (keeping instances of the same template from colliding) declaratively, without the isolated-network approach breaking on restarts.
+
+DNS provider integration
+You can now connect Cloudflare or AWS Route53 and let Dokploy manage DNS records for your domains directly.
+
+When you add a domain, Dokploy creates the record for you instead of making you switch tabs, copy the server IP, and wait for propagation before you find out whether you typed it correctly. Apex domains are handled, too: @ resolves to the zone's apex automatically.
+
+Dokploy DNS provider integration
+
+Vault providers for environment secrets
+Environment variables can now be resolved at deploy time from an external secret manager, using a unified reference syntax:
+
+
+DATABASE_PASSWORD=${{vault.production.db_password}}
+The value never gets stored in Dokploy. It's fetched from your provider when the deployment runs, which means rotating a secret in the vault takes effect on the next deploy with no changes on the Dokploy side.
+
+Supported providers:
+
+HashiCorp Vault / OpenBao
+Infisical
+AWS Secrets Manager
+Doppler
+Scaleway Secret Manager
+Dokploy vault providers for environment secrets
+
+Concurrent Builds
+For the first two years, Dokploy used a single global build queue across every server. That's gone. Each server now has its own dedicated queue.
+
+Dokploy Concurrent Builds
+
+Encrypted Environment Variables at Rest
+If you'd rather keep secrets in Dokploy instead of pointing at an external vault, they're now encrypted at rest with AES-256-GCM. The full keyring is exported in the backup encryption key file, so restoring an instance restores access to your secrets.
+
+Between this and the vault providers above, you can pick whichever model your organization requires – Dokploy-managed and encrypted, or externally managed and referenced.
+
+Unified Docker dashboard
+Docker management used to be spread across separate pages, and finding the right one meant knowing where to look. /dashboard/docker is now a single hub with everything under one set of tabs:
+
+Containers – The container list you already know.
+Volumes – Now with a built-in file explorer, so you can browse volume contents without SSH-ing into the server.
+Networks – Create, inspect, and delete Docker networks without leaving the dashboard.
+Events – A sortable, paginated stream of Docker events.
+Images – Inspect and manage images on the host.
+Disk Usage – See exactly what's consuming space before you run a cleanup.
+Health – Diagnostics for common Docker misconfigurations.
+Swarm – Cluster nodes moved here from their old standalone page.
+Dokploy's Unified Docker dashboard
+
+The volume file explorer is the one we're most excited about. Debugging a container that writes to a volume previously meant connecting to the server and digging through `/var/lib/docker/volumes`. Now you can browse it directly from the dashboard.
+
+
+
+Images shows every image on the host with size and age, so you can spot the ones worth pruning before you reach for docker system prune.
+
+Dokploy Docker Images
+
+Events streams what the Docker daemon reports in real time – container starts and stops, image pulls, and network connects – filterable and paginated instead of scrolling a raw docker events output.
+
+Dokploy Docker Events
+
+Disk Usage breaks down images, containers, volumes, and build cache with reclaimable space called out for each, plus a searchable table of build cache layers so you know exactly what a prune will free up.
+
+Dokploy Docker Disk Usage
+
+Health runs a read-only diagnostic over SSH – inotify limits, disk, memory/CPU reservations, and per-network IP usage – the same checks we used to walk people through manually when a deploy mysteriously stalled.
+
+Dokploy Docker Health
+
+Overview dashboard
+Projects now open to an overview page that summarizes Services, Backups, and Domains at a glance. Deployments moved into their own tab within the same view.
+
+Instead of clicking into each service to check whether backups are configured or which domains are live, you get the whole picture on one screen.
+
+Dokploy Overview dashboard
+
+Enterprise: SCIM, Forward Auth SSO, and deployment restrictions
+Three enterprise capabilities landed during this cycle:
+
+SCIM 2.0 user provisioning – Users and groups sync automatically from your identity provider, so deprovisioning in Okta or Entra deprovisions in Dokploy.
+Forward Auth SSO – Put your identity provider in front of any deployed application, not just the Dokploy dashboard itself.
+Self-hosted enterprise restrictions – Enforce remote-servers-only deployments and require SSO for all members.
+Dokploy SCIM provisioning
+
+Session management
+A new page lists your active sessions and lets you revoke them individually – useful if you've logged in from a machine you no longer control, or you just want to see where your account is currently authenticated.
+
+Diokploy session management
+
+Passkey Support
+You can now sign in without a password using your device's biometrics, security key, or password manager. Add a passkey from Settings → Profile, and it shows up right on the login screen as a "Sign in with Passkey" option alongside email/password and SSO.
+
+
+
+Default organization role
+Admins can now set a default role that's applied automatically to new members joining an organization. No more remembering to downgrade every invite after the fact.
+
+Dokploy default organization role
+
+Domain enable/disable toggle
+Domains can be disabled without deleting them. The route comes out of Traefik, but the configuration stays intact, so you can pull a domain temporarily and bring it back without re-entering certificates, paths, and middleware.
+
+Dokploy domain enable/disable toggle
+
+Security
+This release includes a set of fixes we want to call out explicitly:
+
+Command injection via compose domain serviceName – A crafted service name could escape into the host shell.
+SSRF via Route53 endpoint override – The endpoint override has been removed.
+Traefik updated from v3.6.7 to v3.6.25, pulling in upstream security patches.
+Earlier in the cycle, v0.29.13 shipped a large coordinated security batch: roughly 16 fixes covering command injection across git clone, docker build and pull, backup and restore, compose paths, swarm node IDs and registry tags – plus a set of cross-organization IDOR and authorization bypasses affecting git provider secrets, SSH private keys, swarm reads, server removal, the GitHub App setup callback, and host schedule ownership.
+
+We also replaced the hardcoded BETTER_AUTH_SECRET with Docker secret support, and moved auto-generated domains from traefik.me to sslip.io.
+
+Additional Enhancements
+TypeScript 7 and Next.js 16.3 across the monorepo.
+Custom AI provider presets can now be defined at the organization level.
+install.sh is attached to every GitHub release, pinned to that exact version.
+Postgres image change warning – Dokploy warns when the implied data directory doesn't match the mounted volume, before you lose data.
+Isolated deployments – Traefik routing is now pinned to the isolated network.
+Backups – The database dump runs once per backup instead of twice, and partial uploads are cleaned up on failure.
+MySQL/MariaDB restores now target the selected database correctly (USE/CREATE DATABASE statements are stripped).
+Server threshold notifications now go out through email, Resend, Gotify, and Ntfy.
+Monitoring – Block I/O and Network I/O charts populate correctly, and chart animations are disabled for smoother rendering.
+Compose – createEnvFile toggle added (mirroring Applications), special characters preserved in generated .env values, command chaining allowed, and previews now reflect patches.
+Terminal – clipboard addon added, and Option/Alt composed characters work on macOS.
+Swarm – Stack containers running on worker nodes are now visible.
+Rollbacks – Environment variables resolve correctly, and the Postgres 100-argument limit no longer breaks lookups.
+Nixpacks – isStaticSpa toggle exposed alongside publish directory.
+GitLab – OAuth token responses missing expires_in are handled.
+Domains – Single-label hostnames without a TLD are now allowed, and CDN info messages no longer render as errors.
+Databases – Copy buttons on User and Database Name fields.
+Templates – isolated = false opt-out supported in template.toml.
+Schedules – Optional description field.
+Templates – ~100 new templates added this cycle, bringing the catalog to 500 templates.
+Plus a long list of UI fixes across dropdowns, modals, badges, avatars, log counters, and error pages.
+
+We want to express our gratitude! We've reached 37k stars on GitHub and over 12 million downloads on DockerHub. Thank you so much for your incredible support!
+
+A special thanks to everyone who contributed to this release – the domain toggle, session management page, Scaleway vault provider, Traefik update, and dozens of fixes in this list came from the community.

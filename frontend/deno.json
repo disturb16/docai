@@ -1,0 +1,23 @@
+{
+  "nodeModulesDir": "auto",
+  "lint": {
+    "exclude": ["pb_public"]
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "@tailwindcss/cli": "npm:@tailwindcss/cli@^4.3.3",
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.3.3",
+    "@vitejs/plugin-vue": "npm:@vitejs/plugin-vue@^6.0.8",
+    "marked": "npm:marked@^18.0.11",
+    "pocketbase": "npm:pocketbase@^0.28.0",
+    "tailwindcss": "npm:tailwindcss@^4.3.3",
+    "vite": "npm:vite@^8.2.2",
+    "vue": "npm:vue@^3.5.42",
+    "vue-router": "npm:vue-router@^5.3.0"
+  },
+  "tasks": {
+    "dev": "deno run -A npm:vite",
+    "build": "deno run -A npm:@tailwindcss/cli -i src/style.css -o src/style.generated.css && deno run -A npm:vite build",
+    "preview": "deno run -A npm:vite preview"
+  }
+}

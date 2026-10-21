@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #f7f9fb;
+  --color-surface-dim: #d8dadc;
+  --color-surface-bright: #f7f9fb;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container: #eceef0;
+  --color-surface-container-high: #e6e8ea;
+  --color-surface-container-highest: #e0e3e5;
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #454652;
+  --color-inverse-surface: #2d3133;
+  --color-inverse-on-surface: #eff1f3;
+  --color-outline: #757684;
+  --color-outline-variant: #c5c5d4;
+  --color-surface-tint: #4355b9;
+  --color-primary: #24389c;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #3f51b5;
+  --color-on-primary-container: #cacfff;
+  --color-inverse-primary: #bac3ff;
+  --color-secondary: #4c56af;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #959efd;
+  --color-on-secondary-container: #27308a;
+  --color-tertiary: #313e7e;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #495697;
+  --color-on-tertiary-container: #c9d0ff;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #dee0ff;
+  --color-primary-fixed-dim: #bac3ff;
+  --color-on-primary-fixed: #00105c;
+  --color-on-primary-fixed-variant: #293ca0;
+  --color-secondary-fixed: #e0e0ff;
+  --color-secondary-fixed-dim: #bdc2ff;
+  --color-on-secondary-fixed: #000767;
+  --color-on-secondary-fixed-variant: #343d96;
+  --color-tertiary-fixed: #dee1ff;
+  --color-tertiary-fixed-dim: #b9c3ff;
+  --color-on-tertiary-fixed: #021355;
+  --color-on-tertiary-fixed-variant: #354282;
+  --color-background: #f7f9fb;
+  --color-on-background: #191c1e;
+  --color-surface-variant: #e0e3e5;
+  --color-slate-900: #0f172a;
+  --color-slate-700: #334155;
+  --color-slate-400: #94a3b8;
+  --color-status-pending: #94a3b8;
+  --color-status-processing: #3b82f6;
+  --color-status-done: #10b981;
+  --color-status-error: #ef4444;
+
+  --font-headline: "Geist", sans-serif;
+  --font-body: "Inter", sans-serif;
+
+  --spacing-baseline: 4px;
+  --spacing-gutter: 16px;
+  --spacing-margin-page: 24px;
+  --spacing-list-item-py: 12px;
+  --spacing-list-item-px: 16px;
+  --spacing-panel-gap: 1px;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-background);
+  color: var(--color-on-background);
+}
